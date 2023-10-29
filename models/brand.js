@@ -1,14 +1,27 @@
-const mongoose = require('mongoose');
+const Sequelize = require('sequelize');
 
-const brandSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  link: { type: String },
-  description: { type: String },
-  imageURL: { type: String },
-  author: { type: String },
-  title: { type: String },
-});
+module.exports = (sequelize, DataTypes) => {
+  const Brand = sequelize.define('Brand', {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    link: {
+      type: DataTypes.STRING,
+    },
+    description: {
+      type: DataTypes.STRING,
+    },
+    imageURL: {
+      type: DataTypes.STRING,
+    },
+    author: {
+      type: DataTypes.STRING,
+    },
+    title: {
+      type: DataTypes.STRING,
+    },
+  });
 
-const Brand = mongoose.model('Brand', brandSchema);
-
-module.exports = Brand;
+  return Brand;
+};

@@ -1,68 +1,50 @@
-const User = require('../models/user');
-const bcrypt = require('bcryptjs');
+const db = require('../models'); // Import your Sequelize models
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const apiConfig = require("../config/api");
 
-const api_config = require("../config/api.js");
-
-const AuthController = {
-
-    /* create new user */
-    async create_user(req, res, next) {
-
-        const newUser = new User({
-            username: req.body.username,
-            email: req.body.email,
-            password: bcrypt.hashSync(req.body.password, 10)
-        });
-
-        try {
-            const user = await newUser.save();
-            res.status(201).json({
-                type : 'success',
-                message: "User has been created successfuly",
-                user
-            })
-        } catch (err) {
-            res.status(500).json({
-                type: "error",
-                message: "Something went wrong please try again",
-                err
-            })
-        }
-    },
-
-    /* login existing user */
-    async login_user(req, res) {
-        
-        const user = await User.findOne({ username: req.body.username });
-
-        if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
-            res.status(500).json({
-                type: "error",
-                message: "User not exists or invalid credentials",
-            })
-        } else {
-
-            const accessToken = jwt.sign({
-                id: user._id,
-                isAdmin: user.isAdmin}, 
-            api_config.api.jwt_secret,
-            { expiresIn: "1d"}
-            );
-
-            const { password, ...data } = user._doc;
-
-            res.status(200).json({
-                type: "success",
-                message: "Successfully logged",
-                ...data,
-                accessToken
-            })
-        }
+const UserController = {
+  // Create a new user
+  createUser: async (data) => {
+    try {
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const user = await db.User.create({ ...data, password: hashedPassword });
+      return user;
+    } catch (error) {
+      throw error;
     }
+  },
+
+  // Login an existing user
+  loginUser: async (username, password) => {
+    try {
+      const user = await db.User.findOne({ where: { username: username } });
+
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        throw new Error('User not exists or invalid credentials');
+      }
+
+      const accessToken = jwt.sign(
+        {
+          id: user.id,
+          isAdmin: user.isAdmin,
+        },
+        apiConfig.jwtSecret,
+        { expiresIn: '1d' }
+      );
+
+      const { password: _, ...data } = user.toJSON(); // Exclude password from the response
+
+      return {
+        type: 'success',
+        message: 'Successfully logged in',
+        ...data,
+        accessToken,
+      };
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
-module.exports = {
-    login_user,
-    create_user,
-  };
+module.exports = UserController;

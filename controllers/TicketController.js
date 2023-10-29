@@ -1,49 +1,53 @@
-const Ticket = require('../models/ticket');
+const db = require('../models'); // Import your Sequelize models
 
 // Create a new ticket
 const createTicket = async (req, res) => {
   try {
-    const newTicket = new Ticket(req.body);
-    await newTicket.save();
-    res.status(201).send(newTicket);
+    const newTicket = await db.Ticket.create(req.body);
+    res.status(201).json(newTicket);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 };
 
 // Get all tickets
 const getTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.find();
-    res.send(tickets);
+    const tickets = await db.Ticket.findAll();
+    res.json(tickets);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 };
 
 // Get a specific ticket by ID
 const getTicketById = async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id);
+    const ticket = await db.Ticket.findByPk(req.params.id);
     if (!ticket) {
-      return res.status(404).send();
+      return res.status(404).json({ message: 'Ticket not found' });
     }
-    res.send(ticket);
+    res.json(ticket);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 };
 
 // Update a ticket by ID
 const updateTicketById = async (req, res) => {
   try {
-    const updatedTicket = await Ticket.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // Return the updated ticket
+    const [updatedRows] = await db.Ticket.update(req.body, {
+      where: { id: req.params.id },
+      returning: true,
     });
-    if (!updatedTicket) {
+
+    if (updatedRows === 0) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
-    res.status(200).json(updatedTicket);
+
+    const updatedTicket = updatedRows[1][0]; // Get the updated ticket
+
+    res.json(updatedTicket);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -52,10 +56,12 @@ const updateTicketById = async (req, res) => {
 // Delete a ticket by ID
 const deleteTicketById = async (req, res) => {
   try {
-    const deletedTicket = await Ticket.findByIdAndRemove(req.params.id);
-    if (!deletedTicket) {
+    const deletedRows = await db.Ticket.destroy({ where: { id: req.params.id } });
+
+    if (deletedRows === 0) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
+
     res.status(204).send(); // No content (ticket deleted successfully)
   } catch (error) {
     res.status(500).json({ error: error.message });

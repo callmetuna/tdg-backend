@@ -1,23 +1,27 @@
-const mongoose = require('mongoose');
-const Sequence = require('mongoose-sequence');
+const Sequelize = require('sequelize');
 
-// Define Ticket schema
-const ticketSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
-  userToken: { type: String }, // JWT token for user authentication and authorization
+module.exports = (sequelize, DataTypes) => {
+  const Ticket = sequelize.define('Ticket', {
+    userId: {
+      type: DataTypes.INTEGER, // Assuming userId is an integer type
+    },
+    eventId: {
+      type: DataTypes.INTEGER, // Assuming eventId is an integer type
+    },
+    userToken: {
+      type: DataTypes.STRING,
+    },
+  });
 
-});
+  // Define associations if necessary
+  Ticket.associate = (models) => {
+    Ticket.belongsTo(models.User, {
+      foreignKey: 'userId',
+    });
+    Ticket.belongsTo(models.Event, {
+      foreignKey: 'eventId',
+    });
+  };
 
-// Initialize the sequence for 'ticketId'
-const ticketSequence = new Sequence({
-  name: 'ticket_sequence',
-  collection: 'tickets',
-});
-
-// Define Ticket model
-const Ticket = mongoose.model('Ticket', ticketSchema, {
-  sequence: ticketSequence,
-});
-
-module.exports = Ticket;
+  return Ticket;
+};

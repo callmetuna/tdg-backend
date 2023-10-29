@@ -1,21 +1,44 @@
-const mongoose = require('mongoose');
+const Sequelize = require('sequelize');
 
-const eventSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  date: { type: Date, required: true },
-  location: { type: String, required: true },
-  picture: { type: String }, // URL to the event's picture
-  description: { type: String, required: true },
-  artist: { type: String, required: true },
-  eventType: { 
-    type: String, 
-    enum: ['Music', 'Sports', 'Conference', 'Party', 'Other'], // Define the event types
-    required: true,
-  },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Store the event creator (user)
-  userToken: { type: String }, // JWT token for event creator's authentication and authorization
-});
+module.exports = (sequelize, DataTypes) => {
+  const Event = sequelize.define('Event', {
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    picture: {
+      type: DataTypes.STRING,
+    },
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    artist: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    eventType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isIn: [['Music', 'Sports', 'Conference', 'Party', 'Other']],
+      },
+    },
+  });
 
-const Event = mongoose.model('Event', eventSchema);
+  Event.associate = (models) => {
+    Event.belongsTo(models.User, {
+      foreignKey: 'createdBy',
+    });
+  };
 
-module.exports = Event;
+  return Event;
+};

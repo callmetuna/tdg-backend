@@ -1,25 +1,46 @@
-const mongoose = require('mongoose');
+const Sequelize = require('sequelize');
 
-const blogPostSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  tags: [{ type: String }], // An array of strings for tags
-  image: { 
-    data: Buffer, // Binary image data
-    contentType: String, // MIME type of the image
-  },
-  createdAt: { type: Date, default: Date.now }, // Timestamp when the blog post was created
-  updatedAt: { type: Date }, // Timestamp when the blog post was last updated
-  authorToken: { type: String }, // JWT token for author's authentication and authorization
-});
+module.exports = (sequelize, DataTypes) => {
+  const BlogPost = sequelize.define('BlogPost', {
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    authorId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'User',
+        key: 'id',
+      },
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+    },
+    authorToken: {
+      type: DataTypes.STRING,
+    },
+  });
 
-// Automatically update 'updatedAt' field when a blog post is modified
-blogPostSchema.pre('save', function (next) {
-  this.updatedAt = new Date();
-  next();
-});
+  BlogPost.associate = (models) => {
+    BlogPost.belongsTo(models.User, {
+      foreignKey: 'authorId',
+      as: 'author',
+    });
+    // Add associations with other models if necessary
+  };
 
-const BlogPost = mongoose.model('BlogPost', blogPostSchema);
+  BlogPost.beforeUpdate((blogPost) => {
+    blogPost.updatedAt = new Date();
+  });
 
-module.exports = BlogPost;
+  return BlogPost;
+};

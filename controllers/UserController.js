@@ -1,16 +1,8 @@
-// controllers/userController.js
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
-const Winston = require('winston');
-const User = require('../models/userModel');
-
-const logger = Winston.createLogger({
-  transports: [
-    new Winston.transports.Console(),
-    new Winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new Winston.transports.File({ filename: 'combined.log' }),
-  ],
-});
+const jwt = require('jsonwebtoken');
+const db = require('../models'); // Assuming you've set up Sequelize and imported your models
+const logger = require('winston'); // Import your logger configuration
 
 // Create a new user
 const createUser = async (req, res) => {
@@ -24,14 +16,14 @@ const createUser = async (req, res) => {
     // Hash the password before saving it
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-    const newUser = new User({
+    // Create a new user using Sequelize model
+    const newUser = await db.User.create({
       username: req.body.username,
       email: req.body.email,
       password: hashedPassword,
     });
 
-    await newUser.save();
-    res.status(201).send(newUser);
+    res.status(201).json(newUser);
   } catch (error) {
     logger.error(error);
     res.status(500).send('Internal Server Error');
@@ -44,11 +36,13 @@ const getUsers = async (req, res) => {
     const page = req.query.page || 1;
     const perPage = req.query.perPage || 10;
 
-    const users = await User.find()
-      .skip((page - 1) * perPage)
-      .limit(perPage);
+    // Retrieve users using Sequelize model
+    const users = await db.User.findAll({
+      offset: (page - 1) * perPage,
+      limit: perPage,
+    });
 
-    res.send(users);
+    res.json(users);
   } catch (error) {
     logger.error(error);
     res.status(500).send('Internal Server Error');
@@ -58,11 +52,12 @@ const getUsers = async (req, res) => {
 // Get a specific user by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    // Find a user by ID using Sequelize model
+    const user = await db.User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).send('User not found');
     }
-    res.send(user);
+    res.json(user);
   } catch (error) {
     logger.error(error);
     res.status(500).send('Internal Server Error');
@@ -72,13 +67,19 @@ const getUserById = async (req, res) => {
 // Update a user by ID
 const updateUserById = async (req, res) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+    // Update user using Sequelize model
+    const [updatedRows] = await db.User.update(req.body, {
+      where: { id: req.params.id },
+      returning: true,
     });
-    if (!updatedUser) {
+
+    if (updatedRows === 0) {
       return res.status(404).send('User not found');
     }
-    res.status(200).send(updatedUser);
+
+    const updatedUser = updatedRows[1][0]; // Get the updated user
+
+    res.status(200).json(updatedUser);
   } catch (error) {
     logger.error(error);
     res.status(500).send('Internal Server Error');
@@ -88,10 +89,12 @@ const updateUserById = async (req, res) => {
 // Delete a user by ID
 const deleteUserById = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndRemove(req.params.id);
-    if (!deletedUser) {
+    // Delete user using Sequelize model
+    const deletedUser = await db.User.destroy({ where: { id: req.params.id } });
+    if (deletedUser === 0) {
       return res.status(404).send('User not found');
     }
+
     res.status(204).send();
   } catch (error) {
     logger.error(error);
