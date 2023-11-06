@@ -1,4 +1,4 @@
-const db = require('../models'); // Import your Sequelize models
+const db = require('../models/user'); 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const apiConfig = require("../config/api");

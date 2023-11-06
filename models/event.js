@@ -1,44 +1,30 @@
-const Sequelize = require('sequelize');
-
+'use strict';
+const {
+  Model
+} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  const Event = sequelize.define('Event', {
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    location: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    picture: {
-      type: DataTypes.STRING,
-    },
-    description: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    artist: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    eventType: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isIn: [['Music', 'Sports', 'Conference', 'Party', 'Other']],
-      },
-    },
+  class Event extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+    }
+  }
+  Event.init({
+    title: DataTypes.STRING,
+    date: DataTypes.DATE,
+    location: DataTypes.STRING,
+    picture: DataTypes.STRING,
+    description: DataTypes.STRING,
+    artist: DataTypes.STRING,
+    eventType: DataTypes.STRING,
+    createdBy: DataTypes.INTEGER
+  }, {
+    sequelize,
+    modelName: 'Event',
   });
-
-  Event.associate = (models) => {
-    Event.belongsTo(models.User, {
-      foreignKey: 'createdBy',
-    });
-  };
-
   return Event;
 };

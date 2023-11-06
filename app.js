@@ -3,8 +3,8 @@ const app = express();
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const { readdirSync } = require('fs');
-const { connectToDatabase } = require('./database'); // Adjust the path as needed
-require('dotenv').config();
+const connection = require('./database')(app); // Import the database connection
+const mysql = require('mysql');
 
 // Load routes dynamically
 readdirSync('./routes').map((file) =>
@@ -14,12 +14,11 @@ readdirSync('./routes').map((file) =>
 // Connect to the database
 (async () => {
   try {
-    const db = await connectToDatabase();
+   
 
     // Set the connected database object as an app-level variable
-    app.set('db', db);
+    app.set('db', connection);
 
-    // Other middleware and configuration settings go here
 
     // Use the userRouter for /user routes
     const userRouter = require('./routes/userRoutes');

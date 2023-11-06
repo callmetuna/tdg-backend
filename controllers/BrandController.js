@@ -1,68 +1,103 @@
-const db = require('../models'); // Import your Sequelize models
+const db  = require('../models/brand'); 
+const Brand = db.Brand;
 
-const BrandController = {
-  // Create a new brand
-  createBrand: async (data) => {
-    try {
-      const brand = await db.Brand.create(data);
-      return brand;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Get all brands
-  getBrands: async () => {
-    try {
-      const brands = await db.Brand.findAll();
-      return brands;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Get a specific brand by ID
-  getBrandById: async (id) => {
-    try {
-      const brand = await db.Brand.findByPk(id);
-      return brand;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Update a brand by ID
-  updateBrandById: async (id, data) => {
-    try {
-      const [updatedRows] = await db.Brand.update(data, {
-        where: { id: id },
-        returning: true,
-      });
-
-      if (updatedRows === 0) {
-        throw new Error('Brand not found');
-      }
-
-      const updatedBrand = updatedRows[1][0]; // Get the updated brand
-
-      return updatedBrand;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Delete a brand by ID
-  deleteBrandById: async (id) => {
-    try {
-      const deletedRows = await db.Brand.destroy({ where: { id: id } });
-
-      if (deletedRows === 0) {
-        throw new Error('Brand not found');
-      }
-    } catch (error) {
-      throw error;
-    }
-  },
+// Create a new brand
+const createBrand = async (req, res) => {
+  try {
+    const { name, link, description, imageURL, author, title } = req.body;
+    const newBrand = await Brand.create({
+      name,
+      link,
+      description,
+      imageURL,
+      author,
+      title,
+    });
+    res.status(201).json(newBrand);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
 
-module.exports = BrandController;
+// Get all brands 
+const getBrands = async (req, res) => {
+  try {
+    const brands = await Brand.findAll();
+    res.json(brands);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a specific brand by ID
+const getBrandById = async (req, res) => {
+  try {
+    const brandId = req.params.id;
+    const brand = await Brand.findByPk(brandId);
+
+    if (!brand) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+
+    res.json(brand);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Update a brand by ID
+const updateBrandById = async (req, res) => {
+  try {
+    const brandId = req.params.id;
+    const { name, link, description, imageURL, author, title } = req.body;
+
+    const [updatedRows] = await Brand.update(
+      {
+        name,
+        link,
+        description,
+        imageURL,
+        author,
+        title,
+      },
+      {
+        where: { id: brandId },
+        returning: true,
+      }
+    );
+
+    if (updatedRows === 0) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+
+    const updatedBrand = updatedRows[1][0]; // Get the updated brand
+
+    res.json(updatedBrand);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Delete a brand by ID
+const deleteBrandById = async (req, res) => {
+  try {
+    const brandId = req.params.id;
+    const deletedRows = await Brand.destroy({ where: { id: brandId } });
+
+    if (deletedRows === 0) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+
+    res.status(204).send(); // No content (brand deleted successfully)
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = {
+  createBrand,
+  getBrands,
+  getBrandById,
+  updateBrandById,
+  deleteBrandById,
+};

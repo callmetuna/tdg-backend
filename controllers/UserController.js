@@ -1,8 +1,8 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('../models'); // Assuming you've set up Sequelize and imported your models
-const logger = require('winston'); // Import your logger configuration
+const db = require('../models/user');
+const logger = require('winston'); 
 
 // Create a new user
 const createUser = async (req, res) => {

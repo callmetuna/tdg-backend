@@ -1,4 +1,4 @@
-const db = require('../models'); // Import your Sequelize models
+const db = require('../models/ticket'); 
 
 // Create a new ticket
 const createTicket = async (req, res) => {

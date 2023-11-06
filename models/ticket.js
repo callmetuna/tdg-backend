@@ -1,27 +1,25 @@
-const Sequelize = require('sequelize');
-
+'use strict';
+const {
+  Model
+} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  const Ticket = sequelize.define('Ticket', {
-    userId: {
-      type: DataTypes.INTEGER, // Assuming userId is an integer type
-    },
-    eventId: {
-      type: DataTypes.INTEGER, // Assuming eventId is an integer type
-    },
-    userToken: {
-      type: DataTypes.STRING,
-    },
+  class Ticket extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+    }
+  }
+  Ticket.init({
+    userId: DataTypes.INTEGER,
+    eventId: DataTypes.INTEGER,
+    userToken: DataTypes.STRING
+  }, {
+    sequelize,
+    modelName: 'Ticket',
   });
-
-  // Define associations if necessary
-  Ticket.associate = (models) => {
-    Ticket.belongsTo(models.User, {
-      foreignKey: 'userId',
-    });
-    Ticket.belongsTo(models.Event, {
-      foreignKey: 'eventId',
-    });
-  };
-
   return Ticket;
 };

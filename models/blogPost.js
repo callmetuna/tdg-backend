@@ -1,46 +1,28 @@
-const Sequelize = require('sequelize');
-
+'use strict';
+const {
+  Model
+} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  const BlogPost = sequelize.define('BlogPost', {
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    authorId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'User',
-        key: 'id',
-      },
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-    },
-    authorToken: {
-      type: DataTypes.STRING,
-    },
+  class BlogPost extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+    }
+  }
+  BlogPost.init({
+    title: DataTypes.STRING,
+    content: DataTypes.TEXT,
+    authorId: DataTypes.INTEGER,
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    authorToken: DataTypes.STRING
+  }, {
+    sequelize,
+    modelName: 'BlogPost',
   });
-
-  BlogPost.associate = (models) => {
-    BlogPost.belongsTo(models.User, {
-      foreignKey: 'authorId',
-      as: 'author',
-    });
-    // Add associations with other models if necessary
-  };
-
-  BlogPost.beforeUpdate((blogPost) => {
-    blogPost.updatedAt = new Date();
-  });
-
   return BlogPost;
 };

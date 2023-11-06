@@ -1,26 +1,28 @@
-const { MongoClient } = require('mongodb');
-require('dotenv').config(); // Load environment variables from .env file
+const mysql = require('mysql');
 
-// MongoDB connection URL constructed using environment variables
-const mongoURI = `mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+module.exports = function (app) {
+  // Create a connection to the MySQL database
+  const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'tdg-app',
+  });
 
-// Create a MongoDB client
-const client = new MongoClient(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+  // Connect to the MySQL server
+  connection.connect((err) => {
+    if (err) {
+      console.error('Error connecting to the database:', err);
+      return;
+    }
+    console.log('Connected to the MySQL database');
+  });
 
-// Connect to the MongoDB server
-async function connectToDatabase() {
-  try {
-    await client.connect();
-    console.log('Connected to MongoDB');
-    return client.db(); // Return the connected database object
-  } catch (err) {
-    console.error('Error connecting to MongoDB:', err);
-    throw err;
-  }
-}
+  // Set the connected database object as an app-level variable
+  app.set('db', connection);
 
-// Export the connectToDatabase function
-module.exports = { connectToDatabase };
+  // Return the 'connection' object so that it can be used elsewhere if needed
+  return connection;
+
+  
+};

@@ -1,71 +1,86 @@
-const db = require('../models'); // Import your Sequelize models
+const db = require('../models/event'); 
+const mysql = require('mysql');
+const connection = require('../database'); 
 
 // Create a new event
-const createEvent = async (req, res) => {
-  try {
-    const newEvent = await db.Event.create(req.body);
-    res.status(201).json(newEvent);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+const createEvent = (req, res) => {
+  const { name, date, location } = req.body;
+  const sql = 'INSERT INTO events (name, date, location) VALUES (?, ?, ?)';
+  const values = [name, date, location];
+
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+    } else {
+      const newEventId = result.insertId;
+      res.status(201).json({ id: newEventId });
+    }
+  });
 };
 
 // Get all events
-const getEvents = async (req, res) => {
-  try {
-    const events = await db.Event.findAll();
-    res.json(events);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+const getEvents = (req, res) => {
+  const sql = 'SELECT * FROM events';
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(results);
+    }
+  });
 };
 
 // Get a specific event by ID
-const getEventById = async (req, res) => {
-  try {
-    const event = await db.Event.findByPk(req.params.id);
-    if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+const getEventById = (req, res) => {
+  const eventId = req.params.id;
+  const sql = 'SELECT * FROM events WHERE id = ?';
+  const values = [eventId];
+
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else if (result.length === 0) {
+      res.status(404).json({ message: 'Event not found' });
+    } else {
+      res.json(result[0]);
     }
-    res.json(event);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  });
 };
 
 // Update an event by ID
-const updateEventById = async (req, res) => {
-  try {
-    const [updatedRows] = await db.Event.update(req.body, {
-      where: { id: req.params.id },
-      returning: true,
-    });
+const updateEventById = (req, res) => {
+  const eventId = req.params.id;
+  const { name, date, location } = req.body;
+  const sql = 'UPDATE events SET name = ?, date = ?, location = ? WHERE id = ?';
+  const values = [name, date, location, eventId];
 
-    if (updatedRows === 0) {
-      return res.status(404).json({ message: 'Event not found' });
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+    } else if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'Event not found' });
+    } else {
+      res.json({ id: eventId });
     }
-
-    const updatedEvent = updatedRows[1][0]; // Get the updated event
-
-    res.json(updatedEvent);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  });
 };
 
 // Delete an event by ID
-const deleteEventById = async (req, res) => {
-  try {
-    const deletedRows = await db.Event.destroy({ where: { id: req.params.id } });
+const deleteEventById = (req, res) => {
+  const eventId = req.params.id;
+  const sql = 'DELETE FROM events WHERE id = ?';
+  const values = [eventId];
 
-    if (deletedRows === 0) {
-      return res.status(404).json({ message: 'Event not found' });
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'Event not found' });
+    } else {
+      res.status(204).send();
     }
-
-    res.status(204).send(); // No content (event deleted successfully)
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  });
 };
 
 module.exports = {

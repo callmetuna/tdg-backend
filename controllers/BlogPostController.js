@@ -1,4 +1,4 @@
-const db = require('../models'); // Import your Sequelize models
+const db = require('../models/blogpost'); 
 
 const BlogPostController = {
   // Create a new blog post
