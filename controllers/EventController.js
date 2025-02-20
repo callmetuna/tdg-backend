@@ -25,7 +25,7 @@ const getEvents = (req, res) => {
   connection.query(sql, (err, results) => {
     if (err) {
       res.status(500).json({ error: err.message });
-    } else {
+    } else { 
       res.json(results);
     }
   });
